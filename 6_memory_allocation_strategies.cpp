@@ -1,132 +1,209 @@
-#include<iostream>
+#include <iostream>
+#include <vector>
 #include <climits>
 using namespace std;
 
-void first_fit(int blocks, int blocksSize[], int process, int processSize[]) {
-    for(int i=0;i<process;i++) {
-        for(int j=0;j<blocks;j++) {
-            if(processSize[i]<=blocksSize[j]) {
-                blocksSize[j]-=processSize[i];
-                cout<<"Process "<<i+1<<" fitted in block "<<j+1<<endl;
+void firstFit(vector<int> blockSize, vector<int>& processSize, int m, int n) {
+    vector<int> allocation(n, -1);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (blockSize[j] >= processSize[i]) {
+                allocation[i] = j;
+                blockSize[j] -= processSize[i];
                 break;
             }
         }
     }
+    cout << "\nFirst Fit Allocation:\n";
+    for (int i = 0; i < n; i++)
+        if (allocation[i] != -1)
+            cout << "Process " << i + 1 << " is allocated to Block " << allocation[i] + 1 << endl;
+        else
+            cout << "Process " << i + 1 << " is not allocated\n";
 }
 
-void next_fit(int blocks, int blocksSize[], int process, int processSize[]) {
-    int lastOccupied=0;
-    for(int i=0;i<process;i++) {
-        for(int j=lastOccupied;j<blocks;j++) {
-            if(processSize[i]<=blocksSize[j]) {
-                blocksSize[j]-=processSize[i];
-                lastOccupied=j;
-                cout<<"Process "<<i+1<<" fitted in block "<<j+1<<endl;
+void bestFit(vector<int> blockSize, vector<int>& processSize, int m, int n) {
+    vector<int> allocation(n, -1);
+    for (int i = 0; i < n; i++) {
+        int bestIdx = -1;
+        for (int j = 0; j < m; j++) {
+            if (blockSize[j] >= processSize[i]) {
+                if (bestIdx == -1 || blockSize[bestIdx] > blockSize[j])
+                    bestIdx = j;
+            }
+        }
+        if (bestIdx != -1) {
+            allocation[i] = bestIdx;
+            blockSize[bestIdx] -= processSize[i];
+        }
+    }
+    cout << "\nBest Fit Allocation:\n";
+    for (int i = 0; i < n; i++)
+        if (allocation[i] != -1)
+            cout << "Process " << i + 1 << " is allocated to Block " << allocation[i] + 1 << endl;
+        else
+            cout << "Process " << i + 1 << " is not allocated\n";
+}
+
+void nextFit(vector<int> blockSize, vector<int>& processSize, int m, int n) {
+    vector<int> allocation(n, -1);
+    int j = 0;
+    for (int i = 0; i < n; i++) {
+        int count = 0;
+        while (count < m) {
+            if (blockSize[j] >= processSize[i]) {
+                allocation[i] = j;
+                blockSize[j] -= processSize[i];
                 break;
             }
+            j = (j + 1) % m;
+            count++;
         }
     }
+    cout << "\nNext Fit Allocation:\n";
+    for (int i = 0; i < n; i++)
+        if (allocation[i] != -1)
+            cout << "Process " << i + 1 << " is allocated to Block " << allocation[i] + 1 << endl;
+        else
+            cout << "Process " << i + 1 << " is not allocated\n";
 }
 
-void best_fit(int blocks, int blocksSize[], int process, int processSize[]) {
-    for(int i=0;i<process;i++) {
-        int diff = INT_MAX;
-        int index = -1;
-        for(int j=0;j<blocks;j++) {
-            if(blocksSize[j] >= processSize[i] && (blocksSize[j] - processSize[i]) < diff) {
-                diff = blocksSize[j] - processSize[i];
-                index = j;
+void worstFit(vector<int> blockSize, vector<int>& processSize, int m, int n) {
+    vector<int> allocation(n, -1);
+    for (int i = 0; i < n; i++) {
+        int worstIdx = -1;
+        for (int j = 0; j < m; j++) {
+            if (blockSize[j] >= processSize[i]) {
+                if (worstIdx == -1 || blockSize[worstIdx] < blockSize[j])
+                    worstIdx = j;
             }
         }
-        if(index != -1) {
-            blocksSize[index] -= processSize[i];
-            cout<<"Process "<<i+1<<" fitted in block "<<index+1<<endl;
-        } else {
-            cout<<"Process "<<i+1<<" could not be allocated\n";
+        if (worstIdx != -1) {
+            allocation[i] = worstIdx;
+            blockSize[worstIdx] -= processSize[i];
         }
     }
-}
-
-void worst_fit(int blocks, int blocksSize[], int process, int processSize[]) {
-    for(int i=0;i<process;i++) {
-        int diff = INT_MIN;
-        int index = -1;
-        for(int j=0;j<blocks;j++) {
-            if(blocksSize[j] >= processSize[i] && (blocksSize[j] - processSize[i]) > diff) {
-                diff = blocksSize[j] - processSize[i];
-                index = j;
-            }
-        }
-        if(index != -1) {
-            blocksSize[index] -= processSize[i];
-            cout<<"Process "<<i+1<<" fitted in block "<<index+1<<endl;
-        } else {
-            cout<<"Process "<<i+1<<" could not be allocated\n";
-        }
-    }
+    cout << "\nWorst Fit Allocation:\n";
+    for (int i = 0; i < n; i++)
+        if (allocation[i] != -1)
+            cout << "Process " << i + 1 << " is allocated to Block " << allocation[i] + 1 << endl;
+        else
+            cout << "Process " << i + 1 << " is not allocated\n";
 }
 
 int main() {
-    int blocks;
-    cout<<"Enter number of blocks : ";
-    cin>>blocks;
-    int blocksSize[blocks];
-    int copyofBlocksSize[blocks];
-    cout<<"Enter sizes of blocks : ";
-    for(int i=0;i<blocks;i++) {
-        cin>>blocksSize[i];
-    }
+    int m, n, choice;
+    
+    cout << "Enter number of memory blocks and processes: ";
+    cin >> m >> n;
 
-    int process;
-    cout<<"Enter number of processes : ";
-    cin>>process;
-    int processSize[process];
-    int copyofProcessSize[process];
-    cout<<"Enter sizes of processes : ";
-    for(int i=0;i<process;i++) {
-        cin>>processSize[i];
-    }
+    vector<int> originalBlockSize(m), processSize(n);
 
-    int ch=0;
-    while(ch!=5) {
-        cout<<"Menu: \n";
-        cout<<"1. First Fit\n";
-        cout<<"2. Next Fit\n";
-        cout<<"3. Best Fit\n";
-        cout<<"4. Worst Fit\n";
-        cout<<"5. Exit\n\n";
-        cout<<"Enter a choice : ";
-        cin>>ch;
+    cout << "Enter memory block sizes:\n";
+    for (int i = 0; i < m; i++)
+        cin >> originalBlockSize[i];
 
-        switch (ch)
-        {
-        case 1:
-            copy(blocksSize,blocksSize+blocks,copyofBlocksSize);
-            copy(processSize,processSize+process,copyofProcessSize);
-            first_fit(blocks,copyofBlocksSize,process,copyofProcessSize);
-            break;
-        case 2:
-            copy(blocksSize,blocksSize+blocks,copyofBlocksSize);
-            copy(processSize,processSize+process,copyofProcessSize);
-            next_fit(blocks,copyofBlocksSize,process,copyofProcessSize);
-            break;
-        case 3:
-            copy(blocksSize,blocksSize+blocks,copyofBlocksSize);
-            copy(processSize,processSize+process,copyofProcessSize);
-            best_fit(blocks,copyofBlocksSize,process,copyofProcessSize);
-            break;
-        case 4:
-            copy(blocksSize,blocksSize+blocks,copyofBlocksSize);
-            copy(processSize,processSize+process,copyofProcessSize);
-            worst_fit(blocks,copyofBlocksSize,process,copyofProcessSize);
-            break;
-        case 5:
-            cout<<"Exiting...\n";
-            break;
-        default:
-            cout<<"Invalid choice, please try again.";
-            break;
+    cout << "Enter process sizes:\n";
+    for (int i = 0; i < n; i++)
+        cin >> processSize[i];
+
+    do {
+        cout << "\nMenu:\n";
+        cout << "1. First Fit Allocation\n";
+        cout << "2. Best Fit Allocation\n";
+        cout << "3. Next Fit Allocation\n";
+        cout << "4. Worst Fit Allocation\n";
+        cout << "5. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        // Always use a fresh copy of the original block sizes
+        vector<int> blockSize = originalBlockSize;
+
+        switch(choice) {
+            case 1:
+                firstFit(blockSize, processSize, m, n);
+                break;
+            case 2:
+                bestFit(blockSize, processSize, m, n);
+                break;
+            case 3:
+                nextFit(blockSize, processSize, m, n);
+                break;
+            case 4:
+                worstFit(blockSize, processSize, m, n);
+                break;
+            case 5:
+                cout << "Exiting...\n";
+                break;
+            default:
+                cout << "Invalid choice! Please try again.\n";
         }
-    }
+
+    } while(choice != 5);
+
     return 0;
 }
+
+
+
+// Enter number of blocks : 4
+// Enter sizes of blocks : 40 50 60 70
+// Enter number of processes : 4
+// Enter sizes of processes : 20 10 30 40
+// Menu: 
+// 1. First Fit
+// 2. Next Fit
+// 3. Best Fit
+// 4. Worst Fit
+// 5. Exit
+
+// Enter a choice : 1
+// Process 1 fitted in block 1
+// Process 2 fitted in block 1
+// Process 3 fitted in block 2
+// Process 4 fitted in block 3
+// Menu: 
+// 1. First Fit
+// 2. Next Fit
+// 3. Best Fit
+// 4. Worst Fit
+// 5. Exit
+
+// Enter a choice : 2
+// Process 1 fitted in block 1
+// Process 2 fitted in block 1
+// Process 3 fitted in block 2
+// Process 4 fitted in block 3
+// Menu: 
+// 1. First Fit
+// 2. Next Fit
+// 3. Best Fit
+// 4. Worst Fit
+// 5. Exit
+
+// Enter a choice : 3
+// Process 1 fitted in block 1
+// Process 2 fitted in block 1
+// Process 3 fitted in block 2
+// Process 4 fitted in block 3
+// Menu: 
+// 1. First Fit
+// 2. Next Fit
+// 3. Best Fit
+// 4. Worst Fit
+// 5. Exit
+
+// Enter a choice : 4
+// Process 1 fitted in block 4
+// Process 2 fitted in block 3
+// Process 3 fitted in block 2
+// Process 4 fitted in block 3
+// Menu: 
+// 1. First Fit
+// 2. Next Fit
+// 3. Best Fit
+// 4. Worst Fit
+// 5. Exit
+
+// Enter a choice : 
